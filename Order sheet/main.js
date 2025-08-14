@@ -82,7 +82,7 @@ function renderTypes() {
         const count = allProducts.filter(p => p.brand === currentBrand && p.type === type && !p.discontinued).length;
 
         const card = document.createElement('div');
-        card.className = 'type-card';
+        card.className = 'type-card' + (currentType === type ? ' active' : '');
 
         const typeSpan = document.createElement('span');
         typeSpan.textContent = type;
@@ -97,8 +97,8 @@ function renderTypes() {
 
         card.addEventListener('click', () => {
             currentType = type;
-            renderProducts();
-            updateTypeSelection();
+            renderTypes();
+            renderProducts()
         });
 
         typeContainer.appendChild(card);
