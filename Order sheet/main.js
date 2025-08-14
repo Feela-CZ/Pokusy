@@ -5,11 +5,9 @@ const lightbox = document.getElementById('lightbox');
 const lightboxImg = document.getElementById('lightbox-img');
 
 let logisticsData = {};
-fetch('logistics.json')
-    .then(res => res.json())
-    .then(data => {
-        logisticsData = data;
-    });
+fetch(`${window.API_BASE}/api/logistics?ts=${Date.now()}`)
+    .then(r => r.json())
+    .then(data => { logisticsData = data; });
 
 let allProducts = [];
 let currentBrand = null;
@@ -25,8 +23,8 @@ const logoMap = {
     "Natava": "logo-natava.png"
 };
 
-fetch('products.json')
-    .then(res => res.json())
+fetch(`${window.API_BASE}/api/products?ts=${Date.now()}`)
+    .then(r => r.json())
     .then(data => {
         allProducts = data;
         renderBrands();
@@ -416,10 +414,10 @@ document.addEventListener('keydown', (e) => {
     }
 
     // Všechny modaly
-    try { closeCartModal(); } catch {}
-    try { closeConfirmModal(); } catch {}
-    try { closeClearModal(); } catch {}
-    try { closeInfoModal(); } catch {}
+    try { closeCartModal(); } catch { }
+    try { closeConfirmModal(); } catch { }
+    try { closeClearModal(); } catch { }
+    try { closeInfoModal(); } catch { }
 });
 
 window.addEventListener('click', (e) => {
