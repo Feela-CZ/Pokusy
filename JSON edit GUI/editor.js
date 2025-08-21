@@ -6,7 +6,7 @@ let logisticsData = {};
 let currentLogisticsBrand = null;
 let currentLogisticsKey = null;
 let currentLogisticsProductIndex = null;
-let currentLang = 'en';
+let currentLang = 'cs';
 let showingAllKeys = false;
 let showDiscontinued = false;
 
@@ -121,6 +121,53 @@ const translations = {
         show_discontinued: "Show discontinued",
         hide_discontinued: "Hide discontinued",
         carton_ean: "Carton EAN",
+        product_types: {
+            "Accessories": "Accessories",
+            "Balsam": "Balsam",
+            "Bath Ball": "Bath Ball",
+            "Bath Essence": "Bath Essence",
+            "Bath Foam": "Bath Foam",
+            "Bath Salt": "Bath Salt",
+            "Beard Care": "Beard Care",
+            "Body Butter": "Body Butter",
+            "Body Lotion": "Body Lotion",
+            "Body Oil": "Body Oil",
+            "Body Scrub": "Body Scrub",
+            "Conditioner": "Conditioner",
+            "Dishwashing Liquid": "Dishwashing Liquid",
+            "Fabric Softener": "Fabric Softener",
+            "Face Serum": "Face Serum",
+            "Facial Cosmetics": "Facial Cosmetics",
+            "Foot Cream": "Foot Cream",
+            "Hair Balsam": "Hair Balsam",
+            "Hair Oil": "Hair Oil",
+            "Hand Cream": "Hand Cream",
+            "Hand Gel": "Hand Gel",
+            "Interior Candle": "Interior Candle",
+            "Laundry Perfume": "Laundry Perfume",
+            "Lip Balm": "Lip Balm",
+            "Liquid Soap": "Liquid Soap",
+            "Massage Candle": "Massage Candle",
+            "Massage Emulsion": "Massage Emulsion",
+            "Micellar Water": "Micellar Water",
+            "Nail Polish Remover": "Nail Polish Remover",
+            "Parfum": "Parfum",
+            "Shampoo": "Shampoo",
+            "Shower Gel": "Shower Gel",
+            "Skin Oil": "Skin Oil",
+            "Solid Balsam": "Solid Balsam",
+            "Solid Body Butters": "Solid Body Butters",
+            "Solid Deodorant": "Solid Deodorant",
+            "Solid Shampoo": "Solid Shampoo",
+            "Solid Soap": "Solid Soap",
+            "Sun Care": "Sun Care",
+            "Toothpaste": "Toothpaste",
+            "Travel Kit": "Travel Kit",
+            "Vaselinum": "Vaselinum",
+            "WC Gel": "WC Gel",
+            "Washing Gel": "Washing Gel"
+        }
+
     },
     cs: {
         title: "Editor produktů",
@@ -221,6 +268,52 @@ const translations = {
         show_discontinued: "Zobrazit ukončené",
         hide_discontinued: "Skrýt ukončené",
         carton_ean: "EAN kartonu",
+        product_types: {
+            "Accessories": "Doplňky",
+            "Balsam": "Balzám",
+            "Bath Ball": "Koupelová koule",
+            "Bath Essence": "Esence do koupele",
+            "Bath Foam": "Pěna do koupele",
+            "Bath Salt": "Sůl do koupele",
+            "Beard Care": "Péče o vousy",
+            "Body Butter": "Tělové máslo",
+            "Body Lotion": "Tělové mléko",
+            "Body Oil": "Tělový olej",
+            "Body Scrub": "Tělový peeling",
+            "Conditioner": "Kondicionér",
+            "Dishwashing Liquid": "Prostředek na mytí nádobí",
+            "Fabric Softener": "Aviváž",
+            "Face Serum": "Pleťové sérum",
+            "Facial Cosmetics": "Pleťová kosmetika",
+            "Foot Cream": "Krém na nohy",
+            "Hair Balsam": "Vlasový balzám",
+            "Hair Oil": "Vlasový olej",
+            "Hand Cream": "Krém na ruce",
+            "Hand Gel": "Gel na ruce",
+            "Interior Candle": "Interiérová svíčka",
+            "Laundry Perfume": "Parfém na praní",
+            "Lip Balm": "Balzám na rty",
+            "Liquid Soap": "Tekuté mýdlo",
+            "Massage Candle": "Masážní svíčka",
+            "Massage Emulsion": "Masážní emulze",
+            "Micellar Water": "Micelární voda",
+            "Nail Polish Remover": "Odlakovač na nehty",
+            "Parfum": "Parfém",
+            "Shampoo": "Šampon",
+            "Shower Gel": "Sprchový gel",
+            "Skin Oil": "Pleťový olej",
+            "Solid Balsam": "Tuhý balzám",
+            "Solid Body Butter": "Tuhé tělové máslo",
+            "Solid Deodorant": "Tuhý deodorant",
+            "Solid Shampoo": "Tuhý šampon",
+            "Solid Soap": "Tuhé mýdlo",
+            "Sun Care": "Opalování",
+            "Toothpaste": "Zubní pasta",
+            "Travel Kit": "Cestovní sada",
+            "Vaselinum": "Vazelína",
+            "WC Gel": "WC gel",
+            "Washing Gel": "Prací gel"
+        }
     }
 };
 
@@ -237,9 +330,8 @@ async function apiPut(name, data) {
 async function saveProductsToRepo() {
     try {
         await apiPut('products', products);
-        // po uložení načti čerstvá data
+        // po uložení stáhni čerstvá data, ať je UI v syncu
         products = await fetch(`${window.API_BASE}/api/products?ts=${Date.now()}`).then(r => r.json());
-        alert('products.json uložen');
     } catch (e) {
         alert('Uložení products.json selhalo: ' + e.message);
     }
@@ -249,7 +341,12 @@ async function saveLogisticsToRepo() {
     try {
         await apiPut('logistics', logisticsData);
         logisticsData = await fetch(`${window.API_BASE}/api/logistics?ts=${Date.now()}`).then(r => r.json());
-        alert('logistics.json uložen');
+        Object.keys(logisticsData || {}).forEach(br => {
+            Object.keys(logisticsData[br] || {}).forEach(k => {
+                const pal = logisticsData[br][k]?.PALLET;
+                if (pal && 'carton_ean' in pal) delete pal.carton_ean;
+            });
+        });
     } catch (e) {
         alert('Uložení logistics.json selhalo: ' + e.message);
     }
@@ -257,7 +354,16 @@ async function saveLogisticsToRepo() {
 
 fetch(`${window.API_BASE}/api/logistics?ts=${Date.now()}`)
     .then(r => r.json())
-    .then(data => { logisticsData = data; initUI(); });
+    .then(data => {
+        logisticsData = data;
+        Object.keys(logisticsData || {}).forEach(br => {
+            Object.keys(logisticsData[br] || {}).forEach(k => {
+                const pal = logisticsData[br][k]?.PALLET;
+                if (pal && 'carton_ean' in pal) delete pal.carton_ean;
+            });
+        });
+        initUI();
+    });
 
 function fillKeysSelect(brand, selectedKey = null) {
     const chooseKey = document.getElementById('choose-key');
@@ -276,18 +382,7 @@ function fillKeysSelect(brand, selectedKey = null) {
 }
 
 function initUI() {
-    // --- Save tlačítka: zapnout a připojit správné handlery ---
-    const btnLog = document.getElementById('download-logistics-button');
-    if (btnLog) {
-        btnLog.disabled = false;
-        btnLog.onclick = saveLogisticsToRepo; // uloží logistics.json přes API
-    }
-    const btnProd = document.getElementById('download-button');
-    if (btnProd) {
-        btnProd.onclick = saveProductsToRepo; // uloží products.json přes API
-    }
 
-    document.getElementById('file-input').addEventListener('change', handleFileUpload);
     document.getElementById('add-product').addEventListener('click', openAddModal);
     document.getElementById('product-form').addEventListener('submit', saveProduct);
     document.getElementById('search-input').addEventListener('input', renderTable);
@@ -356,15 +451,23 @@ function initUI() {
 
     document.getElementById('add-logistics-key-form').addEventListener('submit', function (e) {
         e.preventDefault();
+
         const brand = document.getElementById('add-logistics-brand').value.trim();
-        const newKey = document.getElementById('add-logistics-key-name').value.trim();
+        const newKeyRaw = document.getElementById('add-logistics-key-name').value;
+        const newKey = newKeyRaw.trim();
 
         if (!newKey) {
             alert(translations[currentLang].key_required);
             return;
         }
+
         if (!logisticsData[brand]) logisticsData[brand] = {};
-        if (logisticsData[brand][newKey]) {
+
+        const exists = Object.keys(logisticsData[brand]).some(
+            k => k.trim().toLowerCase() === newKey.toLowerCase()
+        );
+
+        if (exists) {
             alert(translations[currentLang].key_already_exists);
             return;
         }
@@ -377,8 +480,8 @@ function initUI() {
             populateLogisticsKeySelect();
             const logSel = document.getElementById('logistics-key');
             if (logSel) {
-                let exists = Array.from(logSel.options).some(o => o.value === newKey);
-                if (!exists) {
+                let existsInSelect = Array.from(logSel.options).some(o => o.value.trim().toLowerCase() === newKey.toLowerCase());
+                if (!existsInSelect) {
                     const opt = document.createElement('option');
                     opt.value = newKey;
                     opt.textContent = newKey;
@@ -405,9 +508,14 @@ function initUI() {
 
         if (sourceLogistics) {
             if (!logisticsData[selectedBrand]) logisticsData[selectedBrand] = {};
-            logisticsData[selectedBrand][selectedKey] = JSON.parse(JSON.stringify(sourceLogistics));
+
+            // deep copy + odstranění případného PALLET.carton_ean
+            const copy = JSON.parse(JSON.stringify(sourceLogistics));
+            if (copy.PALLET && 'carton_ean' in copy.PALLET) delete copy.PALLET.carton_ean;
+            logisticsData[selectedBrand][selectedKey] = copy;
 
             document.getElementById('logistics-key').value = selectedKey;
+
             if (sourceLogistics.ITEM) {
                 Object.keys(sourceLogistics.ITEM).forEach(k => {
                     const input = document.getElementById('logistics-ITEM-' + k);
@@ -428,16 +536,20 @@ function initUI() {
             }
             if (sourceLogistics.PALLET) {
                 Object.keys(sourceLogistics.PALLET).forEach(k => {
+                    if (k === 'carton_ean') return; // nepropagovat historický EAN do inputů
                     const input = document.getElementById('logistics-PALLET-' + k);
                     if (input) input.value = sourceLogistics.PALLET[k] || '';
                 });
             }
+
             if (currentLogisticsProductIndex !== null) {
                 products[currentLogisticsProductIndex].key = selectedKey;
             }
+
             updateLogisticsModalContent(selectedBrand, selectedKey);
         }
         currentLogisticsKey = selectedKey;
+        currentLogisticsBrand = selectedBrand;
         document.getElementById('choose-logistics-modal').style.display = 'none';
         renderTable();
     });
@@ -448,7 +560,6 @@ function initUI() {
             products = data;
             renderTable();
             document.getElementById('product-table-section').style.display = 'block';
-            if (btnProd) btnProd.disabled = false; // povol tlačítko až po načtení
         });
 
     updateLogisticsKeyFilter();
@@ -503,18 +614,6 @@ function updateFilterPlaceholders() {
 document.addEventListener('DOMContentLoaded', () => {
     updateUITexts();
 });
-
-function handleFileUpload(event) {
-    const file = event.target.files[0];
-    const reader = new FileReader();
-    reader.onload = function (e) {
-        products = JSON.parse(e.target.result);
-        renderTable();
-        document.getElementById('product-table-section').style.display = 'block';
-        document.getElementById('download-button').disabled = false;
-    };
-    reader.readAsText(file);
-}
 
 function renderTable() {
     const tbody = document.querySelector('#product-table tbody');
@@ -1118,38 +1217,25 @@ function showLogistics(index) {
     const product = products[index];
     const data = logisticsData?.[product.brand]?.[product.key];
 
-    if (data && data.PALLET) {
-        const hasCarton = data.PALLET.carton_ean !== undefined && data.PALLET.carton_ean !== null && data.PALLET.carton_ean !== '';
-        const prodCarton = product.carton_ean !== undefined && product.carton_ean !== null && product.carton_ean !== '';
-        if (!hasCarton && prodCarton) {
-            data.PALLET.carton_ean = product.carton_ean;
-        }
-    }
     const modal = document.getElementById('logistics-modal');
     const content = document.getElementById('logistics-content');
     content.innerHTML = '';
-
-    const hiddenKeys = ['boxes_per_layer', 'boxes_per_pallet', 'pack'];
 
     document.getElementById('logistics-title').textContent =
         translations[currentLang].logistics_data_for
             .replace('{brand}', product.brand)
             .replace('{key}', product.key);
 
+    // Carton EAN pouze pro zobrazení – primárně z produktu, fallback z historických dat (nepíšeme do logisticsData!)
+    const palletCartonEANForDisplay =
+        (product.carton_ean != null && product.carton_ean !== '') ? product.carton_ean : null;
+
     if (!data) {
         content.innerHTML = `<p>${translations[currentLang].no_logistics_data}</p>`;
     } else {
-        let palletCartonEAN = null;
-
         for (const [section, values] of Object.entries(data)) {
-            const entries = Object.entries(values).filter(([k]) => {
-                if (section === 'PALLET' && k === 'carton_ean') {
-                    palletCartonEAN = values[k];
-                    return false;
-                }
-                return !['boxes_per_layer', 'boxes_per_pallet', 'pack'].includes(k);
-            });
-
+            // Vynecháme případný historický PALLET.carton_ean, jinak zobrazíme vše
+            const entries = Object.entries(values).filter(([k]) => !(section === 'PALLET' && k === 'carton_ean'));
             if (entries.length === 0) continue;
 
             const sectionName = translations[currentLang]['section_' + section] || section;
@@ -1161,11 +1247,12 @@ function showLogistics(index) {
             content.innerHTML += `</ul>`;
         }
 
-        if (palletCartonEAN !== null && palletCartonEAN !== '') {
+        if (palletCartonEANForDisplay != null && palletCartonEANForDisplay !== '') {
             const label = translations[currentLang]['carton_ean'] || attributeLabels['carton_ean'] || 'Carton EAN';
-            content.innerHTML += `<div class="carton-ean-line"><strong>${label}</strong>: ${palletCartonEAN}</div>`;
+            content.innerHTML += `<div class="carton-ean-line"><strong>${label}</strong>: ${palletCartonEANForDisplay}</div>`;
         }
     }
+
     modal.style.display = 'block';
 
     document.querySelectorAll('.close-modal, .close-logistics-modal').forEach(el => {
@@ -1269,7 +1356,6 @@ function openLogisticsEditModal(brand, key, index = null) {
         LAYER: { nr_of_items: '', nr_of_cartons: '' },
         PALLET: {
             length: '', width: '', height: '', weight: '', nr_of_cartons: '', nr_of_items: '', nr_of_layers: '',
-            carton_ean: ''
         }
     };
 
@@ -1318,27 +1404,25 @@ function openLogisticsEditModal(brand, key, index = null) {
     eanBlock.className = 'ean-block';
     eanBlock.innerHTML = `
   <h4>${translations[currentLang]['carton_ean'] || attributeLabels['carton_ean'] || 'Carton EAN'}</h4>
-  <div>
-    <input type="text" id="product-carton-ean" value="${productCartonEAN}">
-  </div>
+  <div><input type="text" id="product-carton-ean" value="${productCartonEAN}"></div>
 `;
     fieldsContainer.appendChild(eanBlock);
 
     modal.style.display = 'block';
 
     document.querySelectorAll('.close-modal, .close-logistics-modal').forEach(el => {
-            el.onclick = function () {
-                const m = el.closest('.modal');
-                if (m) m.style.display = 'none';
-            };
-        });
+        el.onclick = function () {
+            const m = el.closest('.modal');
+            if (m) m.style.display = 'none';
+        };
+    });
 
-        const cancelBtn = document.getElementById('cancel-logistics-edit');
-        if (cancelBtn) {
-            cancelBtn.onclick = function () {
-                document.getElementById('logistics-edit-modal').style.display = 'none';
-            };
-        }
+    const cancelBtn = document.getElementById('cancel-logistics-edit');
+    if (cancelBtn) {
+        cancelBtn.onclick = function () {
+            document.getElementById('logistics-edit-modal').style.display = 'none';
+        };
+    }
 
     const oldForm = document.getElementById('logistics-edit-form');
     oldForm.onsubmit = null;
@@ -1347,6 +1431,11 @@ function openLogisticsEditModal(brand, key, index = null) {
         e.preventDefault();
 
         const newData = JSON.parse(JSON.stringify(data));
+
+        if (newData.PALLET && 'carton_ean' in newData.PALLET) {
+            delete newData.PALLET.carton_ean;
+        }
+
         for (const [section, values] of Object.entries(newData)) {
             for (const keyName of Object.keys(values)) {
                 const inputId = `logistics-${section}-${keyName}`;
@@ -1368,8 +1457,9 @@ function openLogisticsEditModal(brand, key, index = null) {
                 const gu = upd[s] || {};
                 const keys = new Set([...Object.keys(go), ...Object.keys(gu)]);
                 for (const k of keys) {
-                    const vo = (go[k] === undefined ? null : go[k]);
-                    const vu = (gu[k] === undefined ? null : gu[k]);
+                    if (s === 'PALLET' && k === 'carton_ean') continue;
+                    const vo = go[k] ?? null;
+                    const vu = gu[k] ?? null;
                     if (vo !== vu) return true;
                 }
             }
@@ -1404,6 +1494,9 @@ function openLogisticsEditModal(brand, key, index = null) {
             document.getElementById('logistics-confirm-modal').style.display = 'block';
 
             document.getElementById('logistics-confirm-yes').onclick = async function () {
+                if (data.PALLET && 'carton_ean' in data.PALLET) {
+                    delete data.PALLET.carton_ean;
+                }
                 // propsat nové hodnoty z newData do data (logisticsData)
                 for (const [section, values] of Object.entries(newData)) {
                     for (const keyName of Object.keys(values)) {
@@ -1464,8 +1557,10 @@ function updateLogisticsModalContent(brand, key) {
         sections.forEach(section => {
             if (!data[section]) return;
             const group = data[section];
-            let html = `<div class="section-group"><h4>${section}</h4>`;
+            const sectionName = translations[currentLang]['section_' + section] || section;
+            let html = `<div class="section-group"><h4>${sectionName}</h4>`;
             for (const [keyName, value] of Object.entries(group)) {
+                if (keyName === 'carton_ean') continue;
                 const inputId = `logistics-${section}-${keyName}`;
                 html += `
                     <label>${attributeLabels[keyName] || keyName.replace(/_/g, ' ')}:
